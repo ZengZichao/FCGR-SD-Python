@@ -1,0 +1,14 @@
+# Core
+numpy>=1.22
+
+# Tests: independent principal-angle reference
+scipy>=1.8
+
+# Plots (scripts/make_figures.py, fcgrsd mds --plot)
+matplotlib>=3.5
+
+# Data download and alignment baseline
+biopython>=1.79
+
+# Test runner
+pytest>=7.0

@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the paper below."
+title: "FCGR-SD: alignment-free genome comparison on Grassmann manifolds"
+abstract: "Python implementation of the FCGR-SD method: CGR -> FCGR -> truncated column space -> principal angles -> generalized Grassmann distance -> neighbor-joining."
+type: software
+license: MIT
+repository-code: "https://github.com/ZengZichao/FCGR-SD-Python"
+authors:
+  - name: "FCGR-SD Python reproduction contributors"
+keywords:
+  - bioinformatics
+  - alignment-free
+  - chaos game representation
+  - Grassmann manifold
+  - phylogeny
+references:
+  - type: article
+    title: "Exploring geometry of genome space via Grassmann manifolds"
+    authors:
+      - family-names: Li
+        given-names: X.
+      - family-names: Zhou
+        given-names: T.
+      - family-names: Feng
+        given-names: X.
+      - family-names: Yau
+        given-names: S.-T.
+      - family-names: Yau
+        given-names: S. S.-T.
+    journal: "The Innovation"
+    volume: 5
+    issue: 5
+    start: 100677
+    year: 2024
+    doi: "10.1016/j.xinn.2024.100677"
