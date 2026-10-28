@@ -8,6 +8,8 @@
 
 English | [简体中文](README.zh-CN.md)
 
+[![tests](https://github.com/ZengZichao/FCGR-SD-Python/actions/workflows/tests.yml/badge.svg)](https://github.com/ZengZichao/FCGR-SD-Python/actions/workflows/tests.yml)
+
 ---
 
 ## Method

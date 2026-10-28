@@ -10,6 +10,8 @@
 
 [English](README.md) | 简体中文
 
+[![tests](https://github.com/ZengZichao/FCGR-SD-Python/actions/workflows/tests.yml/badge.svg)](https://github.com/ZengZichao/FCGR-SD-Python/actions/workflows/tests.yml)
+
 ---
 
 ## 方法
