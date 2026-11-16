@@ -173,6 +173,9 @@ FCGR-SD-Python/
 ├── pyproject.toml
 ├── requirements.txt
 ├── CITATION.cff
+├── CHANGELOG.md
+├── CONTRIBUTING.md
+├── SECURITY.md
 └── LICENSE
 ```
 
