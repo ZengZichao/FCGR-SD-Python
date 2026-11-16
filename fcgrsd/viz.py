@@ -5,14 +5,14 @@ matplotlib 为可选依赖，仅在调用本模块的函数时导入。
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional, Sequence
+from collections.abc import Sequence
 
 import numpy as np
 
 from .cgr import cgr_coordinates
 from .tree import Node, Tree
 
-__all__ = ["plot_cgr", "plot_fcgr", "draw_tree", "plot_mds"]
+__all__ = ["draw_tree", "plot_cgr", "plot_fcgr", "plot_mds"]
 
 
 def _plt():
@@ -51,9 +51,18 @@ def plot_cgr(
         xs = np.concatenate(([0.5], coords[:k, 0]))
         ys = np.concatenate(([0.5], coords[:k, 1]))
         ax.plot(xs, ys, color="#4a5568", lw=0.5, alpha=0.65, zorder=1)
-        ax.scatter(xs[1:], ys[1:], c=np.arange(k), cmap=cmap, s=5, linewidths=0, zorder=2)
+        ax.scatter(
+            xs[1:], ys[1:], c=np.arange(k), cmap=cmap, s=5, linewidths=0, zorder=2
+        )
     else:
-        ax.scatter(coords[:, 0], coords[:, 1], c=np.arange(len(coords)), cmap=cmap, s=s, linewidths=0)
+        ax.scatter(
+            coords[:, 0],
+            coords[:, 1],
+            c=np.arange(len(coords)),
+            cmap=cmap,
+            s=s,
+            linewidths=0,
+        )
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     ax.set_aspect("equal")
@@ -86,10 +95,10 @@ def draw_tree(
     tree: Tree,
     ax=None,
     *,
-    colors: Optional[Dict[str, str]] = None,
+    colors: dict[str, str] | None = None,
     label_size: float = 6.0,
     line_width: float = 1.0,
-    figsize: Optional[tuple] = None,
+    figsize: tuple | None = None,
 ):
     """绘制矩形（直角）系统发育树。
 
@@ -99,10 +108,10 @@ def draw_tree(
         叶子名 -> 颜色；用于按类群着色（对应论文 Figure 1/2 的配色）。
     """
     plt = _plt()
-    leaves: List[Node] = tree.root.leaves()
+    leaves: list[Node] = tree.root.leaves()
     m = len(leaves)
-    ypos: Dict[int, float] = {id(leaf): float(i) for i, leaf in enumerate(leaves)}
-    xpos: Dict[int, float] = {}
+    ypos: dict[int, float] = {id(leaf): float(i) for i, leaf in enumerate(leaves)}
+    xpos: dict[int, float] = {}
 
     def assign_x(node: Node, x: float) -> None:
         xpos[id(node)] = x
@@ -139,7 +148,13 @@ def draw_tree(
         for c in node.children:
             x1 = xpos[id(c)]
             y1 = ypos[id(c)]
-            ax.plot([x0, x1], [y1, y1], color=_branch_color(c), lw=line_width, solid_capstyle="butt")
+            ax.plot(
+                [x0, x1],
+                [y1, y1],
+                color=_branch_color(c),
+                lw=line_width,
+                solid_capstyle="butt",
+            )
             draw(c)
 
     def _branch_color(node: Node) -> str:
@@ -159,7 +174,15 @@ def draw_tree(
         xmax = xmin + span
     for i, leaf in enumerate(leaves):
         col = colors.get(leaf.name, "#222222") if colors else "#222222"
-        ax.text(xmax + 0.01 * span, i, leaf.name, va="center", ha="left", fontsize=label_size, color=col)
+        ax.text(
+            xmax + 0.01 * span,
+            i,
+            leaf.name,
+            va="center",
+            ha="left",
+            fontsize=label_size,
+            color=col,
+        )
     ax.set_xlim(xmin - 0.01 * span, xmax + 0.22 * span)
     ax.set_ylim(-1, m)
     ax.set_yticks([])
@@ -175,7 +198,7 @@ def plot_mds(
     names: Sequence[str],
     ax=None,
     *,
-    colors: Optional[Dict[str, str]] = None,
+    colors: dict[str, str] | None = None,
     dims: int = 3,
     s: float = 26,
     annotate: bool = False,
@@ -188,7 +211,9 @@ def plot_mds(
         ax = fig.add_subplot(111, projection="3d" if dims >= 3 else None)
     cols = [colors.get(n, "#2b6cb0") for n in names] if colors else "#2b6cb0"
     if dims >= 3:
-        ax.scatter(coords[:, 0], coords[:, 1], coords[:, 2], c=cols, s=s, depthshade=False)
+        ax.scatter(
+            coords[:, 0], coords[:, 1], coords[:, 2], c=cols, s=s, depthshade=False
+        )
         ax.set_zlabel("MDS3", fontsize=8)
     else:
         ax.scatter(coords[:, 0], coords[:, 1], c=cols, s=s)
@@ -196,7 +221,9 @@ def plot_mds(
     if annotate:
         for i, nm in enumerate(names):
             if dims >= 3:
-                ax.text(coords[i, 0], coords[i, 1], coords[i, 2], nm, fontsize=label_size)
+                ax.text(
+                    coords[i, 0], coords[i, 1], coords[i, 2], nm, fontsize=label_size
+                )
             else:
                 ax.text(coords[i, 0], coords[i, 1], nm, fontsize=label_size)
     ax.set_xlabel("MDS1", fontsize=8)

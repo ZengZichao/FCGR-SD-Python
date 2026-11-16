@@ -8,8 +8,8 @@ unrooted tree represented with a degree-2 root, written as standard Newick.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Dict, FrozenSet, List, Optional, Sequence, Set, Tuple
 
 import numpy as np
 
@@ -20,18 +20,18 @@ __all__ = ["Node", "Tree", "neighbor_joining", "read_newick"]
 class Node:
     """树结点（叶子或内部结点）。"""
 
-    name: Optional[str] = None
-    length: Optional[float] = None
-    children: List["Node"] = field(default_factory=list)
+    name: str | None = None
+    length: float | None = None
+    children: list[Node] = field(default_factory=list)
 
     @property
     def is_leaf(self) -> bool:
         return not self.children
 
-    def leaves(self) -> List["Node"]:
+    def leaves(self) -> list[Node]:
         if self.is_leaf:
             return [self]
-        out: List[Node] = []
+        out: list[Node] = []
         for c in self.children:
             out.extend(c.leaves())
         return out
@@ -81,14 +81,14 @@ class Tree:
         return self.to_newick()
 
     # -- 查询 --------------------------------------------------------------
-    def leaf_names(self) -> List[str]:
+    def leaf_names(self) -> list[str]:
         return [n.name or "" for n in self.root.leaves()]
 
     @property
     def n_leaves(self) -> int:
         return len(self.root.leaves())
 
-    def splits(self) -> Set[FrozenSet[str]]:
+    def splits(self) -> set[frozenset[str]]:
         """非平凡二分划（unrooted bipartition）集合，用于 RF 距离。"""
         leaves = self.root.leaves()
         label = {}
@@ -96,25 +96,29 @@ class Tree:
             label[id(node)] = node.name if node.name else f"leaf{i}"
         total = len(leaves)
         all_names = frozenset(label.values())
-        out: Set[FrozenSet[str]] = set()
+        out: set[frozenset[str]] = set()
 
-        def rec(node: Node) -> Set[str]:
+        def rec(node: Node) -> set[str]:
             if node.is_leaf:
                 return {label[id(node)]}
-            acc: Set[str] = set()
+            acc: set[str] = set()
             for c in node.children:
                 acc |= rec(c)
             if node is not self.root and 1 < len(acc) < total - 1:
                 side = frozenset(acc)
                 other = all_names - side
-                key = side if (len(side), sorted(side)) <= (len(other), sorted(other)) else other
+                key = (
+                    side
+                    if (len(side), sorted(side)) <= (len(other), sorted(other))
+                    else other
+                )
                 out.add(key)
             return acc
 
         rec(self.root)
         return out
 
-    def patristic_distances(self) -> Tuple[List[str], np.ndarray]:
+    def patristic_distances(self) -> tuple[list[str], np.ndarray]:
         """返回叶子名与树上的路径距离矩阵（cophenetic distance）。"""
         leaves = self.root.leaves()
         names = [n.name if n.name else f"leaf{i}" for i, n in enumerate(leaves)]
@@ -122,11 +126,11 @@ class Tree:
         D = np.zeros((m, m))
         index = {id(n): i for i, n in enumerate(leaves)}
 
-        def rec(node: Node) -> Dict[int, float]:
+        def rec(node: Node) -> dict[int, float]:
             """返回 {叶子全局下标: 到 node 的距离}。"""
             if node.is_leaf:
                 return {index[id(node)]: 0.0}
-            child_maps: List[Dict[int, float]] = []
+            child_maps: list[dict[int, float]] = []
             for c in node.children:
                 w = c.length or 0.0
                 child_maps.append({k: v + w for k, v in rec(c).items()})
@@ -136,7 +140,7 @@ class Tree:
                     for i, di in child_maps[a].items():
                         for j, dj in child_maps[b].items():
                             D[i, j] = D[j, i] = di + dj
-            merged: Dict[int, float] = {}
+            merged: dict[int, float] = {}
             for cm in child_maps:
                 merged.update(cm)
             return merged
@@ -144,19 +148,19 @@ class Tree:
         rec(self.root)
         return names, D
 
-    def clusters(self) -> Set[FrozenSet[str]]:
+    def clusters(self) -> set[frozenset[str]]:
         """有根树的内部分支簇（clade）集合。"""
         leaves = self.root.leaves()
         label = {}
         for i, node in enumerate(leaves):
             label[id(node)] = node.name if node.name else f"leaf{i}"
         total = len(leaves)
-        out: Set[FrozenSet[str]] = set()
+        out: set[frozenset[str]] = set()
 
-        def rec(node: Node) -> Set[str]:
+        def rec(node: Node) -> set[str]:
             if node.is_leaf:
                 return {label[id(node)]}
-            acc: Set[str] = set()
+            acc: set[str] = set()
             for c in node.children:
                 acc |= rec(c)
             if node is not self.root and 1 < len(acc) < total:
@@ -209,7 +213,7 @@ def neighbor_joining(
     if m == 1:
         return Tree(root=Node(name=names[0]), rooted=False)
 
-    nodes: List[Node] = [Node(name=nm) for nm in names]
+    nodes: list[Node] = [Node(name=nm) for nm in names]
     alive = np.ones(m, dtype=bool)
     size = m
     big = np.inf
@@ -239,7 +243,7 @@ def neighbor_joining(
 
         # 更新到其余活动结点的距离
         for k in range(m):
-            if not alive[k] or k == i or k == j:
+            if not alive[k] or k in (i, j):
                 continue
             dnew = 0.5 * (D[i, k] + D[j, k] - dij)
             D[i, k] = D[k, i] = dnew
@@ -291,7 +295,9 @@ def read_newick(text: str) -> Tree:
                 if pos < n and s[pos] == ")":
                     pos += 1
                     break
-                raise ValueError(f"Newick 解析失败：位置 {pos} 附近 {s[max(0, pos - 20):pos + 20]!r}")
+                raise ValueError(
+                    f"Newick 解析失败：位置 {pos} 附近 {s[max(0, pos - 20) : pos + 20]!r}"
+                )
         # 标签
         if pos < n and s[pos] == "'":
             pos += 1

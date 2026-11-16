@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-
 from fcgrsd.metrics import classical_mds
 from fcgrsd.pipeline import run_fcgr_sd, suggest_n
 

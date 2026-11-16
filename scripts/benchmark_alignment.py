@@ -19,21 +19,20 @@ import argparse
 import csv
 import os
 import sys
-from typing import Dict, List, Tuple
 
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from fcgrsd.distance import build_bases, build_svd_cache, distance_matrix_from_bases  # noqa: E402
-from fcgrsd.fcgr import fcgr_matrix  # noqa: E402
-from fcgrsd.io import read_fasta  # noqa: E402
-from fcgrsd.metrics import robinson_foulds  # noqa: E402
-from fcgrsd.pipeline import scan_truncation_p  # noqa: E402
-from fcgrsd.tree import neighbor_joining  # noqa: E402
+from fcgrsd.distance import build_bases, build_svd_cache, distance_matrix_from_bases
+from fcgrsd.fcgr import fcgr_matrix
+from fcgrsd.io import read_fasta
+from fcgrsd.metrics import robinson_foulds
+from fcgrsd.pipeline import scan_truncation_p
+from fcgrsd.tree import neighbor_joining
 
 
-def alignment_distances(seqs: List[str]) -> np.ndarray:
+def alignment_distances(seqs: list[str]) -> np.ndarray:
     """全局比对（NW）得到的 p-距离矩阵：1 - 比对一致率。"""
     from Bio import Align
 
@@ -55,7 +54,9 @@ def alignment_distances(seqs: List[str]) -> np.ndarray:
     return D
 
 
-def fcgr_baseline_distances(seqs: List[str], k: int, metric: str = "euclidean") -> np.ndarray:
+def fcgr_baseline_distances(
+    seqs: list[str], k: int, metric: str = "euclidean"
+) -> np.ndarray:
     """FCGR 基线（Hatje & Kollmar 的 FCGR 方法）：直接比较频率矩阵。"""
     mats = [fcgr_matrix(s, k, 3, normalize=True).ravel() for s in seqs]
     X = np.vstack(mats)
@@ -74,11 +75,11 @@ def fcgr_baseline_distances(seqs: List[str], k: int, metric: str = "euclidean") 
     raise ValueError(metric)
 
 
-def clade_purity(tree, names: List[str], meta: Dict[str, str]) -> Tuple[int, int]:
+def clade_purity(tree, names: list[str], meta: dict[str, str]) -> tuple[int, int]:
     """统计有多少个分组在树上表现为单系群。"""
     clusters = tree.clusters()
     all_names = set(names)
-    groups: Dict[str, set] = {}
+    groups: dict[str, set] = {}
     for n in names:
         groups.setdefault(meta.get(n, ""), set()).add(n)
     ok = 0
@@ -102,7 +103,7 @@ def main() -> int:
     names, seqs = read_fasta(args.fasta)
     print(f"序列数 {len(names)}，长度中位数 {int(np.median([len(s) for s in seqs]))}")
 
-    meta: Dict[str, str] = {}
+    meta: dict[str, str] = {}
     if args.meta and os.path.exists(args.meta):
         with open(args.meta, encoding="utf-8") as fh:
             meta = {r["name"]: r["group"] for r in csv.DictReader(fh)}
@@ -110,14 +111,16 @@ def main() -> int:
     print("计算全局比对距离矩阵（参考树）...")
     D_aln = alignment_distances(seqs)
     ref_tree = neighbor_joining(names, D_aln)
-    with open(os.path.splitext(args.out)[0] + "_ref.nwk", "wt", encoding="utf-8") as fh:
+    with open(os.path.splitext(args.out)[0] + "_ref.nwk", "w", encoding="utf-8") as fh:
         fh.write(ref_tree.to_newick() + "\n")
 
     lo, hi, step = (float(x) for x in args.p_grid.split(":"))
     ps = np.round(np.arange(lo, hi + 1e-9, step), 4)
 
     print("扫描截断参数 p ...")
-    rows = scan_truncation_p(names, seqs, args.k, ps=ps, reference_tree=ref_tree, verbose=True)
+    rows = scan_truncation_p(
+        names, seqs, args.k, ps=ps, reference_tree=ref_tree, verbose=True
+    )
 
     # FCGR 基线
     for metric in ("euclidean", "pearson"):
@@ -148,11 +151,15 @@ def main() -> int:
         tree = neighbor_joining(names, distance_matrix_from_bases(bases))
         if meta:
             ok, tot = clade_purity(tree, names, meta)
-            print(f"  p={p}: 单系群 {ok}/{tot}，RF={robinson_foulds(tree, ref_tree):.0f}")
-        with open(f"{os.path.splitext(args.out)[0]}_p{p}.nwk", "wt", encoding="utf-8") as fh:
+            print(
+                f"  p={p}: 单系群 {ok}/{tot}，RF={robinson_foulds(tree, ref_tree):.0f}"
+            )
+        with open(
+            f"{os.path.splitext(args.out)[0]}_p{p}.nwk", "w", encoding="utf-8"
+        ) as fh:
             fh.write(tree.to_newick() + "\n")
 
-    with open(args.out, "wt", encoding="utf-8", newline="") as fh:
+    with open(args.out, "w", encoding="utf-8", newline="") as fh:
         keys = ["p", "rank_mean", "rank_min", "rank_max", "rf", "rf_normalized", "note"]
         w = csv.DictWriter(fh, fieldnames=keys, extrasaction="ignore")
         w.writeheader()

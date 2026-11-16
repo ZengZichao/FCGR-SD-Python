@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Tuple
-
 import numpy as np
 
 from .tree import Tree
 
-__all__ = ["robinson_foulds", "classical_mds"]
+__all__ = ["classical_mds", "robinson_foulds"]
 
 
 def robinson_foulds(
@@ -65,7 +63,7 @@ def classical_mds(
     n_components: int = 3,
     *,
     positive: bool = True,
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     """经典多维标度（Torgerson / PCoA）。
 
     论文用 MDS 把 Grassmann 距离矩阵嵌入三维欧氏空间做点云可视化

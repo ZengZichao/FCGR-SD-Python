@@ -6,7 +6,6 @@ from fractions import Fraction
 
 import numpy as np
 import pytest
-
 from fcgrsd.cgr import (
     ALPHABETS,
     cgr_coordinates,
@@ -34,7 +33,9 @@ def exact_cells(seq: str, n: int, kap: int) -> np.ndarray:
         y = (y + v) / 2
         pts.append((x, y))
     size = 2**n
-    return np.array([[int(px * size) + 1, int(py * size) + 1] for px, py in pts[n - 1 :]])
+    return np.array(
+        [[int(px * size) + 1, int(py * size) + 1] for px, py in pts[n - 1 :]]
+    )
 
 
 @pytest.mark.parametrize("kap", [1, 2, 3, 4, 5, 6])
@@ -50,14 +51,18 @@ def test_float_path_matches_exact(kap: int) -> None:
     """浮点路径与整数路径在常规序列上应完全一致。"""
     seq = random_seq(3000, seed=7)
     n = 8
-    assert np.array_equal(cgr_grid_indices(seq, n, kap), cgr_grid_indices_float(seq, n, kap))
+    assert np.array_equal(
+        cgr_grid_indices(seq, n, kap), cgr_grid_indices_float(seq, n, kap)
+    )
 
 
 def test_float_path_handles_degenerate_runs() -> None:
     """长同聚物（浮点退化场景）下两条路径仍应一致。"""
     seq = "ACGT" + "G" * 500 + "ACGT" + "A" * 500 + "ACGT" + "C" * 200
     n = 6
-    assert np.array_equal(cgr_grid_indices(seq, n, 3), cgr_grid_indices_float(seq, n, 3))
+    assert np.array_equal(
+        cgr_grid_indices(seq, n, 3), cgr_grid_indices_float(seq, n, 3)
+    )
 
 
 def test_coordinates_in_unit_square() -> None:

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-
 from fcgrsd.metrics import robinson_foulds
 from fcgrsd.tree import neighbor_joining, read_newick
 

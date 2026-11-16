@@ -5,8 +5,9 @@ from __future__ import annotations
 import math
 import time
 from collections import Counter
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any
 
 import numpy as np
 
@@ -15,7 +16,7 @@ from .grassmann import DEFAULT_EPS, DEFAULT_P
 from .metrics import robinson_foulds
 from .tree import Tree, neighbor_joining
 
-__all__ = ["RunResult", "run_fcgr_sd", "suggest_n", "scan_truncation_p"]
+__all__ = ["RunResult", "run_fcgr_sd", "scan_truncation_p", "suggest_n"]
 
 
 def suggest_n(seq_length: int) -> int:
@@ -26,23 +27,23 @@ def suggest_n(seq_length: int) -> int:
     """
     if seq_length < 4:
         return 1
-    return max(1, int(math.ceil(math.log(seq_length, 4))))
+    return max(1, math.ceil(math.log(seq_length, 4)))
 
 
 @dataclass
 class RunResult:
     """一次完整运行的结果。"""
 
-    names: List[str]
-    sequences: List[str]
+    names: list[str]
+    sequences: list[str]
     distances: np.ndarray
-    bases: List[np.ndarray]
+    bases: list[np.ndarray]
     ranks: np.ndarray
-    tree: Optional[Tree]
-    timings: Dict[str, float] = field(default_factory=dict)
-    params: Dict[str, Any] = field(default_factory=dict)
+    tree: Tree | None
+    timings: dict[str, float] = field(default_factory=dict)
+    params: dict[str, Any] = field(default_factory=dict)
 
-    def summary(self) -> Dict[str, Any]:
+    def summary(self) -> dict[str, Any]:
         d = self.distances
         iu = np.triu_indices_from(d, k=1)
         return {
@@ -118,7 +119,7 @@ def run_fcgr_sd(
     if dup:
         raise ValueError(f"序列名必须唯一，重复的有：{sorted(dup)[:5]}")
 
-    timings: Dict[str, float] = {}
+    timings: dict[str, float] = {}
     t_all = time.perf_counter()
 
     if verbose:
@@ -150,7 +151,7 @@ def run_fcgr_sd(
             flush=True,
         )
 
-    tree: Optional[Tree] = None
+    tree: Tree | None = None
     if build_tree:
         if verbose:
             print("[Step 4] Neighbor-Joining 建树 ...", flush=True)
@@ -191,14 +192,14 @@ def scan_truncation_p(
     sequences: Sequence[str],
     n: int,
     *,
-    ps: Optional[Sequence[float]] = None,
-    reference_tree: Optional[Tree] = None,
+    ps: Sequence[float] | None = None,
+    reference_tree: Tree | None = None,
     alphabet: int = 3,
     rule: str = "ge",
     mode: str = "exact",
     n_jobs: int = 1,
     verbose: bool = False,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """扫描截断参数 p（论文 §1.2.4 的调参流程）。
 
     论文对小数据集的做法是：在 ``0.01 ~ 0.99``（步长 0.01）上遍历 p，
@@ -218,12 +219,12 @@ def scan_truncation_p(
     if ps is None:
         ps = np.round(np.arange(0.01, 1.0, 0.01), 2)
     cache = build_svd_cache(sequences, n, alphabet=alphabet, mode=mode)
-    rows: List[Dict[str, Any]] = []
+    rows: list[dict[str, Any]] = []
     for i, p in enumerate(ps):
         bases = build_bases(sequences, n, p, rule=rule, cache=cache)
         ranks = np.array([b.shape[1] for b in bases])
         D = distance_matrix_from_bases(bases, n_jobs=n_jobs)
-        row: Dict[str, Any] = {
+        row: dict[str, Any] = {
             "p": float(p),
             "rank_mean": float(ranks.mean()),
             "rank_min": int(ranks.min()),

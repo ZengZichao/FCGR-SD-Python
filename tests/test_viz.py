@@ -7,13 +7,12 @@ import pytest
 
 pytest.importorskip("matplotlib")
 
-import matplotlib  # noqa: E402
+import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-
-from fcgrsd.tree import neighbor_joining  # noqa: E402
-from fcgrsd.viz import draw_tree, plot_fcgr  # noqa: E402
+import matplotlib.pyplot as plt
+from fcgrsd.tree import neighbor_joining
+from fcgrsd.viz import draw_tree, plot_fcgr
 
 
 def test_plot_fcgr_matches_cgr_orientation() -> None:

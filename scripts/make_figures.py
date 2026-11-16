@@ -13,22 +13,20 @@ import argparse
 import csv
 import os
 import sys
-from typing import Dict
 
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import matplotlib  # noqa: E402
+import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-
-from fcgrsd.fcgr import fcgr_matrix  # noqa: E402
-from fcgrsd.io import read_fasta  # noqa: E402
-from fcgrsd.metrics import classical_mds  # noqa: E402
-from fcgrsd.pipeline import run_fcgr_sd  # noqa: E402
-from fcgrsd.viz import draw_tree, plot_cgr, plot_fcgr, plot_mds  # noqa: E402
+import matplotlib.pyplot as plt
+from fcgrsd.fcgr import fcgr_matrix
+from fcgrsd.io import read_fasta
+from fcgrsd.metrics import classical_mds
+from fcgrsd.pipeline import run_fcgr_sd
+from fcgrsd.viz import draw_tree, plot_cgr, plot_fcgr, plot_mds
 
 PALETTE = [
     "#1f77b4",
@@ -42,7 +40,7 @@ PALETTE = [
 ]
 
 
-def group_colors(names, meta: Dict[str, str]) -> Dict[str, str]:
+def group_colors(names, meta: dict[str, str]) -> dict[str, str]:
     groups = sorted({meta.get(n, "") for n in names if meta.get(n, "")})
     cmap = {g: PALETTE[i % len(PALETTE)] for i, g in enumerate(groups)}
     return {n: cmap.get(meta.get(n, ""), "#333333") for n in names}
@@ -60,7 +58,7 @@ def main() -> int:
 
     os.makedirs(args.out_dir, exist_ok=True)
     names, seqs = read_fasta(args.fasta)
-    meta: Dict[str, str] = {}
+    meta: dict[str, str] = {}
     if os.path.exists(args.meta):
         with open(args.meta, encoding="utf-8") as fh:
             meta = {r["name"]: r["group"] for r in csv.DictReader(fh)}
@@ -91,7 +89,7 @@ def main() -> int:
     print("已写出", f2)
 
     # --- 图 3：MDS ---
-    coords, vals = classical_mds(res.distances, 3)
+    coords, _ = classical_mds(res.distances, 3)
     fig = plt.figure(figsize=(6.0, 5.2), dpi=180)
     ax = fig.add_subplot(111, projection="3d")
     plot_mds(coords, names, ax, colors=colors, dims=3, s=30)

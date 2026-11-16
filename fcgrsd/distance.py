@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import sys
 import time
+from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor
-from typing import Callable, List, Optional, Sequence, Tuple
+from typing import Callable
 
 import numpy as np
 
@@ -20,10 +21,10 @@ from .grassmann import (
 )
 
 __all__ = [
-    "build_svd_cache",
     "build_bases",
-    "distance_matrix_from_bases",
+    "build_svd_cache",
     "distance_matrix",
+    "distance_matrix_from_bases",
 ]
 
 
@@ -35,12 +36,12 @@ def build_svd_cache(
     mode: str = "exact",
     normalize: bool = False,
     verbose: bool = False,
-) -> List[Tuple[np.ndarray, np.ndarray]]:
+) -> list[tuple[np.ndarray, np.ndarray]]:
     """对每条序列计算 FCGR 的 SVD 因子 ``(U, s)``，供不同 p 值复用。
 
     扫描截断参数 p 时无需重复做 FCGR 与 SVD，可显著提速。
     """
-    cache: List[Tuple[np.ndarray, np.ndarray]] = []
+    cache: list[tuple[np.ndarray, np.ndarray]] = []
     t0 = time.perf_counter()
     for i, seq in enumerate(sequences):
         mat = fcgr_matrix(seq, n, alphabet, normalize=normalize, mode=mode)
@@ -63,8 +64,8 @@ def build_bases(
     mode: str = "exact",
     normalize: bool = False,
     verbose: bool = False,
-    cache: Optional[Sequence[Tuple[np.ndarray, np.ndarray]]] = None,
-) -> List[np.ndarray]:
+    cache: Sequence[tuple[np.ndarray, np.ndarray]] | None = None,
+) -> list[np.ndarray]:
     """对每条序列计算 FCGR 并截断，返回其列空间的正交基列表。
 
     Parameters
@@ -82,7 +83,7 @@ def build_bases(
             raise ValueError("cache 长度与序列数不一致")
         return [basis_from_svd(U, s, p, rule) for U, s in cache]
 
-    bases: List[np.ndarray] = []
+    bases: list[np.ndarray] = []
     t0 = time.perf_counter()
     for i, seq in enumerate(sequences):
         mat = fcgr_matrix(seq, n, alphabet, normalize=normalize, mode=mode)
@@ -107,7 +108,7 @@ def distance_matrix_from_bases(
     method: str = "hybrid",
     n_jobs: int = 1,
     verbose: bool = False,
-    progress: Optional[Callable[[int, int], None]] = None,
+    progress: Callable[[int, int], None] | None = None,
 ) -> np.ndarray:
     """由子空间基列表计算对称距离矩阵（对角线为 0）。"""
     m = len(bases)
@@ -137,7 +138,10 @@ def distance_matrix_from_bases(
         if progress is not None:
             progress(m - 1, m - 1)
     if verbose:
-        print(f"  [距离] 完成 {m * (m - 1) // 2} 对，用时 {time.perf_counter() - t0:.3f}s", file=sys.stderr)
+        print(
+            f"  [距离] 完成 {m * (m - 1) // 2} 对，用时 {time.perf_counter() - t0:.3f}s",
+            file=sys.stderr,
+        )
     return D
 
 
@@ -174,7 +178,14 @@ def distance_matrix(
         形状 ``(m, m)`` 的对称距离矩阵。
     """
     bases = build_bases(
-        sequences, n, p, alphabet=alphabet, rule=rule, mode=mode, normalize=normalize, verbose=verbose
+        sequences,
+        n,
+        p,
+        alphabet=alphabet,
+        rule=rule,
+        mode=mode,
+        normalize=normalize,
+        verbose=verbose,
     )
     return distance_matrix_from_bases(
         bases, eps=eps, method=method, n_jobs=n_jobs, verbose=verbose

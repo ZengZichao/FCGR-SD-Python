@@ -16,23 +16,22 @@ import argparse
 import os
 import random
 from dataclasses import dataclass, field
-from typing import List, Optional
 
 BASES = "ACGT"
 
 
 @dataclass
 class SimNode:
-    name: Optional[str] = None
+    name: str | None = None
     length: float = 0.0
-    children: List["SimNode"] = field(default_factory=list)
+    children: list[SimNode] = field(default_factory=list)
 
     @property
     def is_leaf(self) -> bool:
         return not self.children
 
 
-def random_group(names: List[str], rng: random.Random, lo: float, hi: float) -> SimNode:
+def random_group(names: list[str], rng: random.Random, lo: float, hi: float) -> SimNode:
     """把一组名字随机组装成二叉子树（枝长落在 [lo, hi]）。"""
     pool = [SimNode(name=n, length=rng.uniform(lo, hi)) for n in names]
     while len(pool) > 1:
@@ -126,7 +125,7 @@ def main() -> None:
 
     os.makedirs(args.out_dir, exist_ok=True)
     fa = os.path.join(args.out_dir, f"{args.name}.fasta")
-    with open(fa, "wt", encoding="utf-8") as fh:
+    with open(fa, "w", encoding="utf-8") as fh:
         for name in all_names:
             fh.write(f">{name}\n")
             s = acc[name]
@@ -134,11 +133,11 @@ def main() -> None:
                 fh.write(s[i : i + 70] + "\n")
 
     nwk = os.path.join(args.out_dir, f"{args.name}_true.nwk")
-    with open(nwk, "wt", encoding="utf-8") as fh:
+    with open(nwk, "w", encoding="utf-8") as fh:
         fh.write(to_newick(root) + ";\n")
 
     meta = os.path.join(args.out_dir, f"{args.name}_meta.csv")
-    with open(meta, "wt", encoding="utf-8") as fh:
+    with open(meta, "w", encoding="utf-8") as fh:
         fh.write("name,group\n")
         for gname, names in groups:
             for n in names:

@@ -6,7 +6,6 @@ import argparse
 import json
 import os
 import sys
-from typing import List, Optional
 
 import numpy as np
 
@@ -19,18 +18,50 @@ from .tree import neighbor_joining, read_newick
 
 
 def _add_common(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--k", "--n", dest="k", type=int, default=None, help="FCGR 分辨率参数 n（矩阵 2^n × 2^n）")
-    parser.add_argument("--p", type=float, default=DEFAULT_P, help=f"奇异值累积贡献率截断阈值（默认 {DEFAULT_P}）")
-    parser.add_argument("--alphabet", type=int, default=3, choices=range(1, 7), help="碱基-顶点对应编号 1~6（默认 3）")
-    parser.add_argument("--rule", choices=["ge", "le"], default="ge", help="截断维数判定规则：ge（默认）或 le")
-    parser.add_argument("--mode", choices=["exact", "float"], default="exact", help="FCGR 网格定位方式（默认 exact）")
+    parser.add_argument(
+        "--k",
+        "--n",
+        dest="k",
+        type=int,
+        default=None,
+        help="FCGR 分辨率参数 n（矩阵 2^n × 2^n）",
+    )
+    parser.add_argument(
+        "--p",
+        type=float,
+        default=DEFAULT_P,
+        help=f"奇异值累积贡献率截断阈值（默认 {DEFAULT_P}）",
+    )
+    parser.add_argument(
+        "--alphabet",
+        type=int,
+        default=3,
+        choices=range(1, 7),
+        help="碱基-顶点对应编号 1~6（默认 3）",
+    )
+    parser.add_argument(
+        "--rule",
+        choices=["ge", "le"],
+        default="ge",
+        help="截断维数判定规则：ge（默认）或 le",
+    )
+    parser.add_argument(
+        "--mode",
+        choices=["exact", "float"],
+        default="exact",
+        help="FCGR 网格定位方式（默认 exact）",
+    )
     parser.add_argument("--n-jobs", type=int, default=1, help="成对距离并行线程数")
     parser.add_argument("--quiet", action="store_true", help="关闭进度输出")
 
 
 def cmd_run(args: argparse.Namespace) -> int:
     names, seqs = read_fasta(args.fasta)
-    k = args.k if args.k is not None else suggest_n(int(np.median([len(s) for s in seqs])))
+    k = (
+        args.k
+        if args.k is not None
+        else suggest_n(int(np.median([len(s) for s in seqs])))
+    )
     if args.out_prefix:
         prefix = args.out_prefix
         os.makedirs(os.path.dirname(os.path.abspath(prefix)) or ".", exist_ok=True)
@@ -52,9 +83,9 @@ def cmd_run(args: argparse.Namespace) -> int:
     )
 
     write_distance_matrix(f"{prefix}.dist.csv", names, res.distances)
-    with open(f"{prefix}.nwk", "wt", encoding="utf-8") as fh:
+    with open(f"{prefix}.nwk", "w", encoding="utf-8") as fh:
         fh.write(res.tree.to_newick() + "\n")
-    with open(f"{prefix}.json", "wt", encoding="utf-8") as fh:
+    with open(f"{prefix}.json", "w", encoding="utf-8") as fh:
         json.dump(res.summary(), fh, ensure_ascii=False, indent=2)
     if not args.quiet:
         print(f"已写出：{prefix}.dist.csv / {prefix}.nwk / {prefix}.json")
@@ -63,7 +94,11 @@ def cmd_run(args: argparse.Namespace) -> int:
 
 def cmd_scan_p(args: argparse.Namespace) -> int:
     names, seqs = read_fasta(args.fasta)
-    k = args.k if args.k is not None else suggest_n(int(np.median([len(s) for s in seqs])))
+    k = (
+        args.k
+        if args.k is not None
+        else suggest_n(int(np.median([len(s) for s in seqs])))
+    )
     ref = None
     if args.reference:
         with open(args.reference, encoding="utf-8") as fh:
@@ -81,7 +116,7 @@ def cmd_scan_p(args: argparse.Namespace) -> int:
     )
     out = args.out or "scan_p.csv"
     keys = list(rows[0].keys())
-    with open(out, "wt", encoding="utf-8", newline="") as fh:
+    with open(out, "w", encoding="utf-8", newline="") as fh:
         import csv
 
         w = csv.DictWriter(fh, fieldnames=keys)
@@ -91,7 +126,9 @@ def cmd_scan_p(args: argparse.Namespace) -> int:
     if ref is not None:
         # RF 并列时取较小的 p（截断维数更低、模型更简约）
         best = min(rows, key=lambda r: (r["rf"], r["p"]))
-        print(f"RF 最小的 p = {best['p']}（RF={best['rf']}, 归一化={best['rf_normalized']:.4f}）")
+        print(
+            f"RF 最小的 p = {best['p']}（RF={best['rf']}, 归一化={best['rf_normalized']:.4f}）"
+        )
     print(f"扫描结果已写出：{out}")
     return 0
 
@@ -100,7 +137,7 @@ def cmd_tree(args: argparse.Namespace) -> int:
     names, D = read_distance_matrix(args.dist)
     tree = neighbor_joining(names, D, clamp_negative=args.clamp_negative)
     out = args.out or "tree.nwk"
-    with open(out, "wt", encoding="utf-8") as fh:
+    with open(out, "w", encoding="utf-8") as fh:
         fh.write(tree.to_newick() + "\n")
     print(f"已写出系统发育树：{out}")
     return 0
@@ -113,7 +150,7 @@ def cmd_mds(args: argparse.Namespace) -> int:
     names, D = read_distance_matrix(args.dist)
     coords, vals = classical_mds(D, args.dims)
     out = args.out or "mds.csv"
-    with open(out, "wt", encoding="utf-8", newline="") as fh:
+    with open(out, "w", encoding="utf-8", newline="") as fh:
         import csv
 
         w = csv.writer(fh)
@@ -176,7 +213,9 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--fasta", required=True)
     run.add_argument("--out-prefix", default=None)
     _add_common(run)
-    run.add_argument("--clamp-negative", action="store_true", help="把 NJ 的负枝长截断为 0")
+    run.add_argument(
+        "--clamp-negative", action="store_true", help="把 NJ 的负枝长截断为 0"
+    )
     run.set_defaults(func=cmd_run)
 
     scan = sub.add_parser("scan-p", help="扫描截断参数 p（可选：以参考树 RF 为准则）")
@@ -201,7 +240,7 @@ def build_parser() -> argparse.ArgumentParser:
     return p
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     return int(args.func(args))
 

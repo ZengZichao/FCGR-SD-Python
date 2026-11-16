@@ -53,26 +53,24 @@ Li et al. (2024) *The Innovation* 5:100677 补充材料 §1.2.1、§2。
 
 from __future__ import annotations
 
-from typing import Dict, Tuple
-
 import numpy as np
 
 __all__ = [
     "ALPHABETS",
     "ALPHABET_DESCRIPTIONS",
     "ambiguous_fraction",
-    "normalize_sequence",
-    "encode_bits",
     "cgr_coordinates",
     "cgr_grid_indices",
     "cgr_grid_indices_float",
+    "encode_bits",
+    "normalize_sequence",
 ]
 
 # ---------------------------------------------------------------------------
 # 六种碱基-顶点对应关系（alphabet = 1..6）
 # 每个顶点写作 (第一坐标, 第二坐标)
 # ---------------------------------------------------------------------------
-ALPHABETS: Dict[int, Dict[str, Tuple[int, int]]] = {
+ALPHABETS: dict[int, dict[str, tuple[int, int]]] = {
     1: {"A": (0, 0), "C": (0, 1), "G": (1, 1), "T": (1, 0)},
     2: {"A": (0, 0), "C": (0, 1), "T": (1, 1), "G": (1, 0)},
     3: {"A": (0, 0), "G": (0, 1), "C": (1, 1), "T": (1, 0)},
@@ -81,7 +79,7 @@ ALPHABETS: Dict[int, Dict[str, Tuple[int, int]]] = {
     6: {"A": (0, 0), "T": (0, 1), "G": (1, 1), "C": (1, 0)},
 }
 
-ALPHABET_DESCRIPTIONS: Dict[int, str] = {
+ALPHABET_DESCRIPTIONS: dict[int, str] = {
     1: "ACGT: A(0,0), C(0,1), G(1,1), T(1,0)",
     2: "ACTG: A(0,0), C(0,1), T(1,1), G(1,0)",
     3: "AGCT: A(0,0), G(0,1), C(1,1), T(1,0) (paper Algorithm 2; default)",
@@ -93,7 +91,7 @@ ALPHABET_DESCRIPTIONS: Dict[int, str] = {
 _VALID = frozenset("ACGT")
 
 # 字节 -> 比特查表（255 表示非法字符）
-_LUT: Dict[int, Tuple[np.ndarray, np.ndarray]] = {}
+_LUT: dict[int, tuple[np.ndarray, np.ndarray]] = {}
 for _kap, _mapping in ALPHABETS.items():
     _u = np.full(256, 255, dtype=np.uint8)
     _v = np.full(256, 255, dtype=np.uint8)
@@ -105,9 +103,7 @@ for _kap, _mapping in ALPHABETS.items():
 
 def _check_alphabet(alphabet: int) -> None:
     if alphabet not in ALPHABETS:
-        raise ValueError(
-            f"alphabet must be an integer in 1..6, got {alphabet!r}"
-        )
+        raise ValueError(f"alphabet must be an integer in 1..6, got {alphabet!r}")
 
 
 def _check_n(n: int) -> int:
@@ -163,7 +159,7 @@ def normalize_sequence(seq: str, on_unknown: str = "skip") -> str:
     return "".join(ch for ch in s if ch in _VALID)
 
 
-def encode_bits(seq: str, alphabet: int = 3) -> Tuple[np.ndarray, np.ndarray]:
+def encode_bits(seq: str, alphabet: int = 3) -> tuple[np.ndarray, np.ndarray]:
     """把碱基序列编码为两路 0/1 比特流。
 
     Parameters
@@ -288,9 +284,7 @@ def cgr_grid_indices(seq: str, n: int, alphabet: int = 3) -> np.ndarray:
     u, v = encode_bits(seq, alphabet)
     length = u.shape[0]
     if length < n:
-        raise ValueError(
-            f"序列长度 {length} 小于 FCGR 分辨率参数 n={n}，无法构造 FCGR"
-        )
+        raise ValueError(f"序列长度 {length} 小于 FCGR 分辨率参数 n={n}，无法构造 FCGR")
     windows = length - n + 1
     rows = np.ones(windows, dtype=np.int64)
     cols = np.ones(windows, dtype=np.int64)

@@ -22,6 +22,7 @@ Modules
 from __future__ import annotations
 
 from .cgr import ALPHABETS, cgr_coordinates, cgr_grid_indices
+from .distance import distance_matrix
 from .fcgr import fcgr_matrix
 from .grassmann import (
     DEFAULT_EPS,
@@ -30,26 +31,25 @@ from .grassmann import (
     subspace_basis,
     truncated_basis,
 )
-from .distance import distance_matrix
+from .metrics import classical_mds, robinson_foulds
 from .tree import Tree, neighbor_joining
-from .metrics import robinson_foulds, classical_mds
 
 __version__ = "1.0.0"
 
 __all__ = [
     "ALPHABETS",
+    "DEFAULT_EPS",
+    "Tree",
+    "__version__",
     "cgr_coordinates",
     "cgr_grid_indices",
-    "fcgr_matrix",
-    "truncated_basis",
-    "subspace_basis",
-    "principal_angles",
-    "grassmann_distance",
-    "distance_matrix",
-    "neighbor_joining",
-    "Tree",
-    "robinson_foulds",
     "classical_mds",
-    "DEFAULT_EPS",
-    "__version__",
+    "distance_matrix",
+    "fcgr_matrix",
+    "grassmann_distance",
+    "neighbor_joining",
+    "principal_angles",
+    "robinson_foulds",
+    "subspace_basis",
+    "truncated_basis",
 ]

@@ -34,7 +34,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from typing import Dict, List, Sequence, Tuple
+from collections.abc import Sequence
 
 EFETCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
 
@@ -61,18 +61,20 @@ def _accession(value: str, column: str) -> str:
     return v
 
 
-def load_table(path: str) -> Tuple[List[str], Dict[str, str]]:
-    with open(path, "rt", encoding="utf-8-sig", errors="replace") as fh:
+def load_table(path: str) -> tuple[list[str], dict[str, str]]:
+    with open(path, encoding="utf-8-sig", errors="replace") as fh:
         rows = list(csv.DictReader(fh))
     if not rows:
         raise ValueError(f"{path} 为空")
     cols = list(rows[0].keys())
     acc_col = _pick_column(cols, _ACC_KEYS)
     if acc_col is None:
-        raise ValueError(f"{path} 中找不到登录号列（候选关键字 {_ACC_KEYS}，实际列 {cols}）")
+        raise ValueError(
+            f"{path} 中找不到登录号列（候选关键字 {_ACC_KEYS}，实际列 {cols}）"
+        )
     group_col = _pick_column(cols, _GROUP_KEYS)
-    accs: List[str] = []
-    groups: Dict[str, str] = {}
+    accs: list[str] = []
+    groups: dict[str, str] = {}
     for r in rows:
         acc = _accession(r.get(acc_col, ""), acc_col)
         if not acc:
@@ -83,13 +85,17 @@ def load_table(path: str) -> Tuple[List[str], Dict[str, str]]:
 
 
 def efetch_batch(accessions: Sequence[str], retries: int = 3) -> str:
-    url = EFETCH + "?" + urllib.parse.urlencode(
-        {
-            "db": "nuccore",
-            "id": ",".join(accessions),
-            "rettype": "fasta",
-            "retmode": "text",
-        }
+    url = (
+        EFETCH
+        + "?"
+        + urllib.parse.urlencode(
+            {
+                "db": "nuccore",
+                "id": ",".join(accessions),
+                "rettype": "fasta",
+                "retmode": "text",
+            }
+        )
     )
     last = None
     for attempt in range(retries):
@@ -102,10 +108,10 @@ def efetch_batch(accessions: Sequence[str], retries: int = 3) -> str:
     raise RuntimeError(f"下载失败：{accessions[:2]}... ({last})")
 
 
-def parse_fasta(text: str) -> List[Tuple[str, str]]:
-    out: List[Tuple[str, str]] = []
+def parse_fasta(text: str) -> list[tuple[str, str]]:
+    out: list[tuple[str, str]] = []
     name = None
-    buf: List[str] = []
+    buf: list[str] = []
     for line in text.splitlines():
         if line.startswith(">"):
             if name is not None:
@@ -121,8 +127,14 @@ def parse_fasta(text: str) -> List[Tuple[str, str]]:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Download sequences listed in an accession-table CSV")
-    ap.add_argument("--table", required=True, help="CSV path, or a table name looked up in --data-dir")
+    ap = argparse.ArgumentParser(
+        description="Download sequences listed in an accession-table CSV"
+    )
+    ap.add_argument(
+        "--table",
+        required=True,
+        help="CSV path, or a table name looked up in --data-dir",
+    )
     ap.add_argument(
         "--data-dir",
         default="examples/data",
@@ -131,7 +143,9 @@ def main() -> int:
     ap.add_argument("--out", required=True)
     ap.add_argument("--batch", type=int, default=20)
     ap.add_argument("--sleep", type=float, default=0.4)
-    ap.add_argument("--max", type=int, default=0, help="Maximum number of records (0 = all)")
+    ap.add_argument(
+        "--max", type=int, default=0, help="Maximum number of records (0 = all)"
+    )
     args = ap.parse_args()
 
     table = args.table
@@ -154,8 +168,8 @@ def main() -> int:
         accs = accs[: args.max]
     print(f"共 {len(accs)} 个登录号，来源 {table}")
 
-    found: List[Tuple[str, str]] = []
-    missing: List[str] = []
+    found: list[tuple[str, str]] = []
+    missing: list[str] = []
     for i in range(0, len(accs), args.batch):
         chunk = accs[i : i + args.batch]
         text = efetch_batch(chunk)
@@ -166,24 +180,26 @@ def main() -> int:
                 found.append((acc, dict(recs)[acc]))
             else:
                 missing.append(acc)
-        print(f"  {min(i + args.batch, len(accs))}/{len(accs)}  已获取 {len(found)}，缺失 {len(missing)}")
+        print(
+            f"  {min(i + args.batch, len(accs))}/{len(accs)}  已获取 {len(found)}，缺失 {len(missing)}"
+        )
         time.sleep(args.sleep)
 
     os.makedirs(os.path.dirname(os.path.abspath(args.out)) or ".", exist_ok=True)
-    with open(args.out, "wt", encoding="utf-8") as fh:
+    with open(args.out, "w", encoding="utf-8") as fh:
         for name, seq in found:
             fh.write(f">{name}\n")
             for j in range(0, len(seq), 70):
                 fh.write(seq[j : j + 70] + "\n")
     meta = os.path.splitext(args.out)[0] + "_meta.csv"
-    with open(meta, "wt", encoding="utf-8", newline="") as fh:
+    with open(meta, "w", encoding="utf-8", newline="") as fh:
         w = csv.writer(fh)
         w.writerow(["name", "group"])
         for name, _ in found:
             w.writerow([name, groups.get(name, "")])
     if missing:
         miss_path = os.path.splitext(args.out)[0] + "_missing.txt"
-        with open(miss_path, "wt", encoding="utf-8") as fh:
+        with open(miss_path, "w", encoding="utf-8") as fh:
             fh.write("\n".join(missing) + "\n")
         print(f"缺失 {len(missing)} 条，已记录到 {miss_path}")
 

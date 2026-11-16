@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,7 +8,8 @@ version = "1.0.0"
 description = "FCGR-SD: alignment-free genome comparison on Grassmann manifolds (Python reproduction of Li et al., The Innovation 2024)"
 readme = "README.md"
 requires-python = ">=3.9"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [{ name = "FCGR-SD Python reproduction" }]
 keywords = ["bioinformatics", "alignment-free", "CGR", "FCGR", "Grassmann manifold", "phylogeny"]
 dependencies = ["numpy>=1.22"]
@@ -28,6 +29,25 @@ Issues = "https://github.com/ZengZichao/FCGR-SD-Python/issues"
 
 [tool.setuptools]
 packages = ["fcgrsd"]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 88
+src = ["fcgrsd", "tests", "scripts"]
+# Documentation code samples are laid out for readability; do not reformat them.
+extend-exclude = ["*.md"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF", "C4", "PIE"]
+# E501 is left to the formatter (line-length = 88).
+# RUF001/2/3 flag CJK full-width punctuation as "ambiguous" Unicode; the
+# Chinese documentation and code comments make these false positives.
+ignore = ["E501", "RUF001", "RUF002", "RUF003"]
+
+[tool.ruff.lint.per-file-ignores]
+# Executable scripts and tests import after manipulating sys.path (E402).
+"tests/*" = ["E402"]
+"scripts/*" = ["E402"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

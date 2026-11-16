@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-
 from fcgrsd.io import read_distance_matrix, read_fasta, write_distance_matrix
 
 

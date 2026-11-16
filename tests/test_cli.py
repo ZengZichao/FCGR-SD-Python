@@ -6,7 +6,6 @@ import csv
 from types import SimpleNamespace
 
 import numpy as np
-
 from fcgrsd.cli import cmd_mds, cmd_tree
 from fcgrsd.io import write_distance_matrix
 from fcgrsd.tree import read_newick
@@ -28,7 +27,8 @@ def test_cmd_mds_header_matches_columns(workdir) -> None:
     out = workdir / "mds.csv"
     write_distance_matrix(str(dist), ["A", "B", "C"], D)
     cmd_mds(SimpleNamespace(dist=str(dist), dims=5, out=str(out), plot=None))
-    rows = list(csv.reader(open(out, encoding="utf-8")))
+    with open(out, encoding="utf-8") as fh:
+        rows = list(csv.reader(fh))
     assert len(rows[0]) == len(rows[1]) == 4  # name + min(5, 3) 维
 
 

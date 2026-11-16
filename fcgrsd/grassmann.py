@@ -39,21 +39,21 @@ radians) the sine form is used instead:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal, Tuple
+from typing import Literal
 
 import numpy as np
 
 __all__ = [
     "DEFAULT_EPS",
+    "DEFAULT_P",
     "TruncationInfo",
+    "basis_from_svd",
+    "grassmann_distance",
+    "principal_angles",
     "subspace_basis",
+    "svd_factors",
     "truncated_basis",
     "truncation_rank",
-    "basis_from_svd",
-    "svd_factors",
-    "principal_angles",
-    "grassmann_distance",
-    "DEFAULT_P",
 ]
 
 #: Cosine threshold for the small-angle branch: ``cos(1e-5)``.
@@ -127,7 +127,7 @@ def basis_from_svd(
     return np.ascontiguousarray(U[:, :k])
 
 
-def svd_factors(M: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+def svd_factors(M: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """返回 FCGR 的左奇异向量与奇异值（降序）。"""
     arr = _as_matrix(M)
     U, s, _ = np.linalg.svd(arr, full_matrices=False)

@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from scipy.linalg import subspace_angles
-
 from fcgrsd.grassmann import (
     DEFAULT_EPS,
     grassmann_distance,
@@ -13,6 +11,7 @@ from fcgrsd.grassmann import (
     subspace_basis,
     truncation_rank,
 )
+from scipy.linalg import subspace_angles
 
 
 def random_orthonormal(n: int, k: int, seed: int = 0) -> np.ndarray:
@@ -57,7 +56,10 @@ def test_distance_symmetry_and_triangle_inequality() -> None:
     B = random_orthonormal(80, 6, seed=7)
     C = random_orthonormal(80, 6, seed=8)
     assert grassmann_distance(A, B) == pytest.approx(grassmann_distance(B, A))
-    assert grassmann_distance(A, C) <= grassmann_distance(A, B) + grassmann_distance(B, C) + 1e-12
+    assert (
+        grassmann_distance(A, C)
+        <= grassmann_distance(A, B) + grassmann_distance(B, C) + 1e-12
+    )
 
 
 def test_distance_invariant_under_ambient_rotation() -> None:
@@ -65,7 +67,9 @@ def test_distance_invariant_under_ambient_rotation() -> None:
     A = random_orthonormal(60, 5, seed=9)
     B = random_orthonormal(60, 5, seed=10)
     Q = np.linalg.qr(np.random.default_rng(11).normal(size=(60, 60)))[0]
-    assert grassmann_distance(Q @ A, Q @ B) == pytest.approx(grassmann_distance(A, B), abs=1e-10)
+    assert grassmann_distance(Q @ A, Q @ B) == pytest.approx(
+        grassmann_distance(A, B), abs=1e-10
+    )
 
 
 def test_distance_bounded_by_sqrt_k_pi_2() -> None:
@@ -101,7 +105,10 @@ def test_asin_branch_improves_small_angle_accuracy() -> None:
 def test_truncation_rank_monotone_in_p() -> None:
     rng = np.random.default_rng(14)
     M = rng.random((64, 64)) * (rng.random((64, 64)) > 0.4)
-    ranks = [truncation_rank(np.linalg.svd(M, compute_uv=False), p) for p in (0.1, 0.3, 0.5, 0.7, 0.9)]
+    ranks = [
+        truncation_rank(np.linalg.svd(M, compute_uv=False), p)
+        for p in (0.1, 0.3, 0.5, 0.7, 0.9)
+    ]
     assert ranks == sorted(ranks)
 
 
@@ -135,7 +142,9 @@ def test_scale_invariance() -> None:
     A2 = subspace_basis(M2, 0.7)
     B1 = subspace_basis(M1 * 7.0, 0.7)
     B2 = subspace_basis(M2 * 7.0, 0.7)
-    assert grassmann_distance(A1, A2) == pytest.approx(grassmann_distance(B1, B2), abs=1e-10)
+    assert grassmann_distance(A1, A2) == pytest.approx(
+        grassmann_distance(B1, B2), abs=1e-10
+    )
 
 
 def test_invalid_parameters_raise() -> None:
@@ -151,4 +160,4 @@ def test_invalid_parameters_raise() -> None:
 
 
 def test_default_eps_is_cos_1e_minus_5() -> None:
-    assert DEFAULT_EPS == pytest.approx(np.cos(1e-5))
+    assert pytest.approx(np.cos(1e-5)) == DEFAULT_EPS

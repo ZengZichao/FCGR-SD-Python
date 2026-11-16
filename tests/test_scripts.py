@@ -11,7 +11,7 @@ SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
-from fetch_datasets import load_table  # noqa: E402
+from fetch_datasets import load_table
 
 
 @pytest.mark.parametrize(
@@ -19,16 +19,23 @@ from fetch_datasets import load_table  # noqa: E402
     [
         ("NCBI Accession Number", "KM409247.1", "Gene type", "H1N1"),
         ("GISAID ID", "EPI_ISL_10113812", "Variants", "Beta"),
-        ("Header", "LC710779.1 Avian coronavirus, complete genome", "Subgenus", "Igacovirus"),
+        (
+            "Header",
+            "LC710779.1 Avian coronavirus, complete genome",
+            "Subgenus",
+            "Igacovirus",
+        ),
         ("Accession ID", "EPI_ISL_14466156", "Type", "Omicron BA.5"),
         ("GISAID_ID", "EPI_ISL_14593879", "Pangolin", "B.1.617.2"),
     ],
 )
-def test_load_table_column_variants(workdir, header, value, group_header, group_value) -> None:
+def test_load_table_column_variants(
+    workdir, header, value, group_header, group_value
+) -> None:
     import csv
 
     path = workdir / "t.csv"
-    with open(path, "wt", encoding="utf-8", newline="") as fh:
+    with open(path, "w", encoding="utf-8", newline="") as fh:
         w = csv.writer(fh)
         w.writerow([header, group_header])
         w.writerow([value, group_value])

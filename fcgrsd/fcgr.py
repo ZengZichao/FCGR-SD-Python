@@ -17,7 +17,7 @@ Two grid-location paths are available:
 
 from __future__ import annotations
 
-from typing import List, Sequence
+from collections.abc import Sequence
 
 import numpy as np
 
@@ -29,7 +29,7 @@ from .cgr import (
     normalize_sequence,
 )
 
-__all__ = ["fcgr_matrix", "fcgr_matrices", "fcgr_total"]
+__all__ = ["fcgr_matrices", "fcgr_matrix", "fcgr_total"]
 
 _MAX_RECOMMENDED_N = 11
 
@@ -124,7 +124,7 @@ def fcgr_matrices(
     normalize: bool = False,
     mode: str = "exact",
     dtype=None,
-) -> List[np.ndarray]:
+) -> list[np.ndarray]:
     """批量计算 FCGR，返回列表（不堆叠成三维数组以节省内存）。"""
     return [
         fcgr_matrix(s, n, alphabet, normalize=normalize, mode=mode, dtype=dtype)

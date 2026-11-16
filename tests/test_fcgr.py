@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-
 from fcgrsd.cgr import ALPHABETS
 from fcgrsd.fcgr import fcgr_matrix
 
@@ -38,7 +37,9 @@ def test_single_kmer_cell_formula() -> None:
 
 def test_float_mode_matches_exact_mode() -> None:
     seq = random_seq(1500, seed=21)
-    assert np.array_equal(fcgr_matrix(seq, 6, 3, mode="exact"), fcgr_matrix(seq, 6, 3, mode="float"))
+    assert np.array_equal(
+        fcgr_matrix(seq, 6, 3, mode="exact"), fcgr_matrix(seq, 6, 3, mode="float")
+    )
 
 
 def test_normalize_sums_to_one() -> None:
@@ -88,8 +89,8 @@ def test_warns_for_each_distinct_fraction() -> None:
 
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
-        F.fcgr_matrix("ACGT" * 50 + "N" * 50, 4, 3)   # 50/250 = 20%
-        F.fcgr_matrix("ACGT" * 5 + "N" * 80, 4, 3)    # 80/100 = 80%
+        F.fcgr_matrix("ACGT" * 50 + "N" * 50, 4, 3)  # 50/250 = 20%
+        F.fcgr_matrix("ACGT" * 5 + "N" * 80, 4, 3)  # 80/100 = 80%
     assert len(caught) == 2
     assert "80.0%" in str(caught[1].message)
 
@@ -108,7 +109,7 @@ def test_fcgr_total_ignores_ambiguous_bases() -> None:
     from fcgrsd.fcgr import fcgr_total
 
     assert fcgr_total("ACGTACGT", 2) == 7
-    assert fcgr_total("ACGTNNNN", 2) == 3          # 只数 4 个 ACGT
+    assert fcgr_total("ACGTNNNN", 2) == 3  # 只数 4 个 ACGT
     assert fcgr_total("ACGT-acgt", 2) == 7
     assert fcgr_total("NNNN", 2) == 0
 
